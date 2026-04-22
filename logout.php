@@ -1,32 +1,29 @@
 <?php
-// ============================================
-// logout.php — GameVault
-// Compatible: PHP 5.x
-// ============================================
+// logout.php — Destroy session and redirect
+require_once 'config.php';
 
-session_start();
+if (isLoggedIn()) {
+    // Clear all session data
+    $_SESSION = [];
 
-// Hapus semua data session
-$_SESSION = array();
+    // Destroy the session cookie
+    if (ini_get('session.use_cookies')) {
+        $params = session_get_cookie_params();
+        setcookie(
+            session_name(),
+            '',
+            time() - 42000,
+            $params['path'],
+            $params['domain'],
+            $params['secure'],
+            $params['httponly']
+        );
+    }
 
-// Hapus session cookie jika ada
-if (ini_get("session.use_cookies")) {
-    $params = session_get_cookie_params();
-    setcookie(
-        session_name(),
-        '',
-        time() - 42000,
-        $params["path"],
-        $params["domain"],
-        $params["secure"],
-        $params["httponly"]
-    );
+    session_destroy();
 }
 
-// Hancurkan session
-session_destroy();
-
-// Redirect ke halaman login dengan pesan
-header("Location: login.php?logout=1");
-exit();
-?>
+// Flash message won't work here since session is destroyed,
+// so we pass a query param to the login page instead
+header('Location: login.php?logged_out=1');
+exit;
